@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>MIKEY</title>
+
+    <style>
+        :root {
+            --bg-main: #020617;
+            --bg-panel: #020617;
+            --bg-hover: #0f172a;
+            --neon: #38bdf8;
+            --neon-soft: rgba(56, 189, 248, 0.25);
+            --text-main: #e5e7eb;
+            --text-muted: #94a3b8;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        }
+
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            background: radial-gradient(circle at top, #020617, #000);
+            color: var(--text-main);
+        }
+
+        /* ================= SIDEBAR ================= */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #020617, #000);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid rgba(56, 189, 248, 0.1);
+        }
+
+        .brand h2 {
+            margin: 0;
+            color: var(--neon);
+            letter-spacing: 1px;
+            text-shadow: 0 0 12px var(--neon-soft);
+        }
+
+        .brand small {
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+
+        .new-chat-btn {
+            margin-top: 16px;
+            background: transparent;
+            border: 1px solid var(--neon);
+            color: var(--neon);
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: 0 0 14px var(--neon-soft);
+        }
+
+        .new-chat-btn:hover {
+            background: var(--neon-soft);
+            color: #000;
+        }
+
+        .history-title {
+            margin: 18px 0 10px;
+            font-size: 12px;
+            letter-spacing: 1.2px;
+            color: var(--text-muted);
+        }
+
+        .chat-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 10px;
+            margin-bottom: 6px;
+            background: transparent;
+            transition: all 0.2s ease;
+        }
+
+        .chat-item:hover {
+            background: rgba(56, 189, 248, 0.08);
+        }
+
+        .chat-item.active {
+            background: rgba(56, 189, 248, 0.18);
+            box-shadow: inset 0 0 8px var(--neon-soft);
+        }
+
+        .chat-item a {
+            flex: 1;
+            text-decoration: none;
+            color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .delete-btn {
+            background: none;
+            border: none;
+            color: var(--danger);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .logout {
+            margin-top: 10px;
+            background: transparent;
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 12px;
+            border-radius: 12px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        .logout:hover {
+            background: var(--danger);
+            color: #000;
+        }
+
+        /* ================= MAIN ================= */
+        .main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .messages {
+            flex: 1;
+            padding: 26px;
+            overflow-y: auto;
+        }
+
+        .msg {
+            max-width: 70%;
+            padding: 14px 16px;
+            border-radius: 16px;
+            margin-bottom: 16px;
+            line-height: 1.6;
+            box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+        }
+
+        .user {
+            margin-left: auto;
+            background: linear-gradient(135deg, #0ea5e9, #38bdf8);
+            color: #000;
+            box-shadow: 0 0 16px var(--neon-soft);
+        }
+
+        .bot {
+            background: #0f172a;
+            border: 1px solid rgba(56, 189, 248, 0.15);
+        }
+
+        .document {
+            background: #020617;
+            border-left: 4px solid var(--neon);
+            box-shadow: 0 0 14px var(--neon-soft);
+        }
+
+        /* ================= INPUT ================= */
+        .input-area {
+            padding: 16px;
+            border-top: 1px solid rgba(56, 189, 248, 0.15);
+        }
+
+        .input-box {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: #020617;
+            border-radius: 18px;
+            padding: 12px;
+            border: 1px solid rgba(56, 189, 248, 0.25);
+            box-shadow: 0 0 18px var(--neon-soft);
+        }
+
+        .upload-label {
+            font-size: 22px;
+            cursor: pointer;
+            color: var(--neon);
+        }
+
+        .input-box input[type="text"] {
+            flex: 1;
+            border: none;
+            background: transparent;
+            color: var(--text-main);
+            outline: none;
+            font-size: 15px;
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            color: #000;
+            box-shadow: 0 0 18px var(--neon-soft);
+        }
+
+        .send-btn:hover {
+            transform: scale(1.05);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar">
+        <div class="brand">
+            <h2>🤖AI BOT</h2>
+            <small>Welcome, {{ request.user.username }}</small>
+        </div>
+
+        <form action="{% url 'new_chat' %}" method="get">
+            <button class="new-chat-btn">＋ New Chat</button>
+        </form>
+
+        <div class="history-title">CHAT HISTORY</div>
+
+        <div class="chat-list">
+            {% for conv in conversations %}
+            <div class="chat-item {% if conv.id == active_conversation.id %}active{% endif %}">
+                <a href="{% url 'conversation' conv.id %}">{{ conv.title }}</a>
+                <form method="post" action="{% url 'delete_chat' conv.id %}">
+                    {% csrf_token %}
+                    <button class="delete-btn">🗑</button>
+                </form>
+            </div>
+            {% endfor %}
+        </div>
+
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button class="logout">Logout</button>
+        </form>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="main">
+        <div class="messages">
+            {% for msg in chat_history %}
+            {% if msg.message_type == "document" %}
+            <div class="msg bot document">📄 {{ msg.uploaded_file_name }}</div>
+            {% else %}
+            {% if msg.user_message %}
+            <div class="msg user">{{ msg.user_message }}</div>
+            {% endif %}
+            {% if msg.bot_reply %}
+            <div class="msg bot">{{ msg.bot_reply }}</div>
+            {% endif %}
+            {% endif %}
+            {% endfor %}
+        </div>
+
+        <div class="input-area">
+
+            <!-- FILE PREVIEW (NEW) -->
+            <div id="filePreview" style="
+        display:none;
+        margin-bottom:10px;
+        padding:12px 16px;
+        border-radius:14px;
+        background:#020617;
+        border:1px solid rgba(56,189,248,0.35);
+        color:#38bdf8;
+        box-shadow:0 0 14px rgba(56,189,248,0.25);
+        font-size:14px;
+    ">
+                📄 <span id="fileName"></span>
+            </div>
+            <form method="post" enctype="multipart/form-data" class="input-box">
+                {% csrf_token %}
+                <label for="fileInput" class="upload-label">＋</label>
+                <input type="file" id="fileInput" name="document" hidden>
+                <input type="text" name="message" placeholder="Type a message or upload a document…">
+                <button class="send-btn">Send</button>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        const messages = document.querySelector(".messages");
+        messages.scrollTop = messages.scrollHeight;
+
+        const fileInput = document.getElementById("fileInput");
+        const filePreview = document.getElementById("filePreview");
+        const fileName = document.getElementById("fileName");
+
+        fileInput.addEventListener("change", () => {
+            if (fileInput.files.length > 0) {
+                fileName.textContent = fileInput.files[0].name;
+                filePreview.style.display = "block";
+            } else {
+                filePreview.style.display = "none";
+            }
+        });
+    </script>
+
+
+
+</body>
+
+</html>

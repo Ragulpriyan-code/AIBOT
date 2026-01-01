@@ -1,0 +1,18 @@
+[MASTER]
+load-plugins=pylint_django
+django-settings-module=AIBOT.settings
+ignore=migrations,venv,myvenv,__pycache__
+
+[MESSAGES CONTROL]
+disable=
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+    too-few-public-methods,
+    no-member,
+    arguments-differ,
+    import-outside-toplevel
+
+
+[FORMAT]
+max-line-length=120
