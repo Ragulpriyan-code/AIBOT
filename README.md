@@ -44,7 +44,7 @@ Embeddings: all-MiniLM-L6-v2
 
 Vector store: In-memory (SimpleVectorStore)
 
-LLM: openai/gpt-oss-120b via Groq
+LLM: openai/gpt-oss-20b via Groq
 
 Frontend
 
