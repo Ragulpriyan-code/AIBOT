@@ -105,7 +105,8 @@ def home(request, conversation_id=None):
                 conversation.title = user_msg[:40]
                 conversation.save()
 
-        return redirect("conversation", conversation_id=conversation.id)
+        return redirect(f"/?c={conversation.id}")
+
 
     # ===============================
     # Load UI

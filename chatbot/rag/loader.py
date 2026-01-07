@@ -35,4 +35,4 @@ def load_document(uploaded_file):
         return uploaded_file.read().decode("utf-8", errors="ignore").strip()
 
     else:
-        raise ValueError("Unsupported file type")
+        raise ValueError("Unsupported file type") 
