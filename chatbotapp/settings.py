@@ -1,26 +1,24 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url   # 👈 CORRECT IMPORT
+import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load local env in development only
+# Load local .env in laptop only
 load_dotenv(BASE_DIR / ".env")
 
 """
 Django settings for chatbotapp project.
-Generated using Django 5.2.9
 """
 
+# ====================================================
 # SECURITY
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "django-insecure-default-key"
-)
+# ====================================================
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 DEBUG = True
-
 
 ALLOWED_HOSTS = [
     ".onrender.com",
@@ -28,8 +26,10 @@ ALLOWED_HOSTS = [
     "127.0.0.1"
 ]
 
+# ====================================================
+# APPLICATION
+# ====================================================
 
-# APPS
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -38,16 +38,14 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # YOUR CHATBOT APP — KEEP LOGIC ✔
+    # YOUR CHATBOT APP ✔
     'chatbot',
 ]
 
-
-# MIDDLEWARE
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
-    # STATIC FOR RENDER ✔
+    # RENDER STATIC ✔
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -58,10 +56,8 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-
 ROOT_URLCONF = 'chatbotapp.urls'
 
-# TEMPLATES — YOUR EXISTING UI LOGIC WORKS ✔
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -79,12 +75,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'chatbotapp.wsgi.application'
 
+# ====================================================
+# DATABASE — RENDER FIX ✔
+# ====================================================
 
-# ========================================
-# ❗ DATABASE — KEY FIX ✔
-# ========================================
-
-# 👉 Use Render postgres if ENV present
 if os.environ.get("DATABASE_URL"):
     DATABASES = {
         'default': dj_database_url.parse(
@@ -92,7 +86,7 @@ if os.environ.get("DATABASE_URL"):
         )
     }
 else:
-    # 👉 LOCAL FALLBACK — keep for laptop only ✔
+    # LOCAL LAPTOP POSTGRES ✔
     DATABASES = {
         'default': {
             'ENGINE': 'django.db.backends.postgresql',
@@ -104,26 +98,17 @@ else:
         }
     }
 
+# ====================================================
+# LOGIN LOGIC — KEEP ✔
+# ====================================================
 
-# PASSWORD VALIDATION — KEEP LOGIC ✔
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
 
-
-# INTERNATIONALIZATION
-LANGUAGE_CODE = 'en-us'
-TIME_ZONE = 'UTC'
-USE_I18N = True
-USE_TZ = True
-
-
-# ========================================
-# STATIC LOGIC — YOURS ✔
-# ========================================
+# ====================================================
+# STATIC FILES — KEEP ✔
+# ====================================================
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
@@ -132,10 +117,6 @@ STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static')
 ]
 
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-# LOGIN / LOGOUT — YOUR INTERVIEW LOGIC ✔
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
