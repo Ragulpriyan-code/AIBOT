@@ -5,7 +5,7 @@ import dj_database_url
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Load local .env in laptop only
+# Load local .env in development only
 load_dotenv(BASE_DIR / ".env")
 
 """
@@ -27,7 +27,7 @@ ALLOWED_HOSTS = [
 ]
 
 # ====================================================
-# APPLICATION
+# APPLICATION DEFINITION
 # ====================================================
 
 INSTALLED_APPS = [
@@ -45,7 +45,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
 
-    # RENDER STATIC ✔
+    # RENDER STATIC HANDLING ✔
     'whitenoise.middleware.WhiteNoiseMiddleware',
 
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -57,6 +57,34 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'chatbotapp.urls'
+WSGI_APPLICATION = 'chatbotapp.wsgi.application'
+
+# ====================================================
+# DATABASE — RENDER OVERRIDE + LOCAL FALLBACK ✔
+# ====================================================
+
+DATABASE_URL = os.environ.get("DATABASE_URL")
+
+if DATABASE_URL:
+    DATABASES = {
+        'default': dj_database_url.parse(DATABASE_URL)
+    }
+else:
+    # LOCAL LAPTOP POSTGRES — SAME LOGIC ✔
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'chatbot_db',
+            'USER': 'postgres',
+            'PASSWORD': 'Ragul9345',
+            'HOST': 'localhost',
+            'PORT': '5432',
+        }
+    }
+
+# ====================================================
+# TEMPLATES
+# ====================================================
 
 TEMPLATES = [
     {
@@ -73,41 +101,37 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'chatbotapp.wsgi.application'
-
 # ====================================================
-# DATABASE — RENDER FIX ✔
+# PASSWORD VALIDATION
 # ====================================================
 
-if os.environ.get("DATABASE_URL"):
-    DATABASES = {
-        'default': dj_database_url.parse(
-            os.environ.get("DATABASE_URL")
-        )
-    }
-else:
-    # LOCAL LAPTOP POSTGRES ✔
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': 'chatbot_db',
-            'USER': 'postgres',
-            'PASSWORD': 'Ragul9345',
-            'HOST': 'localhost',
-            'PORT': '5432',
-        }
-    }
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
 
 # ====================================================
-# LOGIN LOGIC — KEEP ✔
+# INTERNATIONALIZATION
 # ====================================================
 
-LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
-LOGOUT_REDIRECT_URL = '/login/'
+LANGUAGE_CODE = 'en-us'
+TIME_ZONE = 'UTC'
+USE_I18N = True
+USE_TZ = True
+USE_TZ = True
 
 # ====================================================
-# STATIC FILES — KEEP ✔
+# STATIC FILES — YOUR SETUP ✔
 # ====================================================
 
 STATIC_URL = '/static/'
@@ -118,5 +142,17 @@ STATICFILES_DIRS = [
 ]
 
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# ====================================================
+# LOGIN / LOGOUT LOGIC — KEEP ✔
+# ====================================================
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'
+
+# ====================================================
+# DEFAULT PK FIELD ✔
+# ====================================================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
