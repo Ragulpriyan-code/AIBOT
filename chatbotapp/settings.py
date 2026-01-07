@@ -66,7 +66,7 @@ WSGI_APPLICATION = "chatbotapp.wsgi.application"
 # ====================================================
 # DATABASE — RENDER OVERRIDE + LOCAL FALLBACK
 # ====================================================
-
+SECRET_KEY = os.environ.get("SECRET_KEY")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
