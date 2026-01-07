@@ -142,3 +142,15 @@ LOGOUT_REDIRECT_URL = '/login/'
 
 
 
+# ==========================================
+# STATIC FILES – REQUIRED FOR RENDER/GUNICORN
+# ==========================================
+
+STATIC_URL = '/static/'
+
+# ✅ THIS LINE FIXES THE ERROR
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static')
+]
