@@ -19,10 +19,11 @@ Django settings for chatbotapp project.
 # Prevent empty key crash in Render
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
-    "django-insecure-temp-key-for-development"
+    "unsafe-dev-key-change-this"
 )
 
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
 
 ALLOWED_HOSTS = [
     ".onrender.com",
@@ -66,7 +67,10 @@ WSGI_APPLICATION = "chatbotapp.wsgi.application"
 # ====================================================
 # DATABASE — RENDER OVERRIDE + LOCAL FALLBACK
 # ====================================================
-SECRET_KEY = os.environ.get("SECRET_KEY")
+SECRET_KEY = os.environ.get(
+    "SECRET_KEY",
+    "unsafe-dev-key-change-this"
+)
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
@@ -74,17 +78,14 @@ if DATABASE_URL:
         "default": dj_database_url.parse(DATABASE_URL)
     }
 else:
-    # LOCAL LAPTOP POSTGRES
+    # LOCAL DEVELOPMENT FALLBACK (SAFE)
     DATABASES = {
         "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "chatbot_db",
-            "USER": "postgres",
-            "PASSWORD": "Ragul9345",
-            "HOST": "localhost",
-            "PORT": "5432",
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
         }
     }
+
 
 # ====================================================
 # TEMPLATES
