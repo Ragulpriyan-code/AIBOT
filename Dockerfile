@@ -27,4 +27,4 @@ COPY . /app/
 RUN DATABASE_URL=sqlite:///dummy.db python manage.py collectstatic --noinput
 
 # Run the application
-CMD gunicorn chatbotapp.wsgi:application --bind 0.0.0.0:$PORT
+CMD ["sh", "-c", "gunicorn chatbotapp.wsgi:application --bind 0.0.0.0:${PORT:-8000}"]
