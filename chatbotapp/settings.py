@@ -7,7 +7,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 # Load local .env in development only
 load_dotenv(BASE_DIR / ".env")
-
 """
 Django settings for chatbotapp project.
 """
@@ -17,13 +16,9 @@ Django settings for chatbotapp project.
 # ====================================================
 
 # Prevent empty key crash in Render
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "unsafe-dev-key-change-this"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-dev-key-change-this")
 
 DEBUG = os.environ.get("DEBUG", "False") == "True"
-
 
 ALLOWED_HOSTS = [
     ".onrender.com",
@@ -54,7 +49,6 @@ MIDDLEWARE = [
 
     # RENDER STATIC HANDLING
     "whitenoise.middleware.WhiteNoiseMiddleware",
-
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     "django.middleware.csrf.CsrfViewMiddleware",
@@ -69,16 +63,11 @@ WSGI_APPLICATION = "chatbotapp.wsgi.application"
 # ====================================================
 # DATABASE — RENDER OVERRIDE + LOCAL FALLBACK
 # ====================================================
-SECRET_KEY = os.environ.get(
-    "SECRET_KEY",
-    "unsafe-dev-key-change-this"
-)
+SECRET_KEY = os.environ.get("SECRET_KEY", "unsafe-dev-key-change-this")
 DATABASE_URL = os.environ.get("DATABASE_URL")
 
 if DATABASE_URL:
-    DATABASES = {
-        "default": dj_database_url.parse(DATABASE_URL)
-    }
+    DATABASES = {"default": dj_database_url.parse(DATABASE_URL)}
 else:
     # LOCAL DEVELOPMENT FALLBACK (SAFE)
     DATABASES = {
@@ -87,7 +76,6 @@ else:
             "NAME": BASE_DIR / "db.sqlite3",
         }
     }
-
 
 # ====================================================
 # TEMPLATES
@@ -113,10 +101,22 @@ TEMPLATES = [
 # ====================================================
 
 AUTH_PASSWORD_VALIDATORS = [
-    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
-    {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
-    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
-    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.MinimumLengthValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.CommonPasswordValidator"
+    },
+    {
+        "NAME":
+        "django.contrib.auth.password_validation.NumericPasswordValidator"
+    },
 ]
 
 # ====================================================
@@ -135,9 +135,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, "static")
-]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 
 STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
@@ -154,3 +152,13 @@ LOGOUT_REDIRECT_URL = "/login/"
 # ====================================================
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# =========================
+# CSRF / Replit Fix
+# =========================
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://*.replit.dev",
+]
+
+SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
