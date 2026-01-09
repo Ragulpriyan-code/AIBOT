@@ -1,1 +1,1 @@
-web: sh -c "gunicorn chatbotapp.wsgi:application --bind 0.0.0.0:${PORT:-8000} --log-file -"
+web: gunicorn -c gunicorn_config.py chatbotapp.wsgi:application
