@@ -1,18 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 set -e
 
-# Print environment for debugging (excluding secrets)
-echo "Starting application..."
-echo "Current Directory: $(pwd)"
-echo "User: $(whoami)"
-echo "Python: $(python --version)"
-echo "Variables: PORT=${PORT}"
+echo "Starting Gunicorn on port $PORT"
 
-# Defensive check for PORT
-if [ -z "$PORT" ] || [ "$PORT" = '$PORT' ]; then
-    echo "PORT is missing or invalid ('$PORT'). Defaulting to 8000."
-    export PORT=8000
-fi
-
-# Run Gunicorn with config
-exec gunicorn -c gunicorn_config.py chatbotapp.wsgi:application
+exec gunicorn chatbotapp.wsgi:application \
+  --bind 0.0.0.0:${PORT:-8000} \
+  --workers 2 \
+  --threads 4 \
+  --timeout 120

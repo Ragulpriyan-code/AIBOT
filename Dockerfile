@@ -1,14 +1,13 @@
 FROM python:3.11-slim
 
-# Keep Python from buffering stdout and stderr
+# Prevent Python buffering & .pyc files
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONDONTWRITEBYTECODE=1
 
-# PREVENT CRASH: Set dummy keys so app imports don't fail at startup
-# (Real keys must still be provided in Railway variables for functionality)
+# Dummy key to avoid import crash during build
 ENV GROQ_API_KEY="dummy_key_for_build_init"
 
-# Install system requirements
+# Install system dependencies
 RUN apt-get update && apt-get install -y \
     build-essential \
     libpq-dev \
@@ -16,19 +15,22 @@ RUN apt-get update && apt-get install -y \
 
 WORKDIR /app
 
-# Install dependencies
-COPY requirements.txt /app/
+# Install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy project files
-COPY . /app/
+COPY . .
 
-# Collect static files (uses dummy DB to avoid build-time connection errors)
+# Collect static files safely during build
 RUN DATABASE_URL=sqlite:///dummy.db python manage.py collectstatic --noinput
 
-COPY entrypoint.sh /app/
-# Fix potential Windows CRLF line endings
+# Copy & fix entrypoint
+COPY entrypoint.sh /app/entrypoint.sh
 RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-# Run the application
+# Railway injects PORT automatically
+EXPOSE 8000
+
+# Start app
 CMD ["/app/entrypoint.sh"]
