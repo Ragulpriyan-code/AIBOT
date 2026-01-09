@@ -27,4 +27,8 @@ COPY . /app/
 RUN DATABASE_URL=sqlite:///dummy.db python manage.py collectstatic --noinput
 
 # Run the application
-CMD ["sh", "-c", "gunicorn -c gunicorn_config.py chatbotapp.wsgi:application"]
+COPY entrypoint.sh /app/
+RUN chmod +x /app/entrypoint.sh
+
+# Run the application
+CMD ["/app/entrypoint.sh"]
