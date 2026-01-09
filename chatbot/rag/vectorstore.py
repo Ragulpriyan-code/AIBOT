@@ -1,41 +1,53 @@
 # chatbot/rag/vectorstore.py
 
 import numpy as np
-import hashlib
 
-
-def simple_embed(text: str, dim: int = 384):
-    """
-    Lightweight deterministic embedding (Replit-safe).
-    """
-    vec = np.zeros(dim, dtype=np.float32)
-    for i in range(dim):
-        h = hashlib.md5(f"{text}-{i}".encode()).hexdigest()
-        vec[i] = int(h[:8], 16) % 1000
-    norm = np.linalg.norm(vec)
-    return vec / norm if norm else vec
+try:
+    from sentence_transformers import SentenceTransformer
+except ImportError:
+    SentenceTransformer = None
 
 
 class SimpleVectorStore:
     def __init__(self):
         self.texts = []
         self.embeddings = []
+        self.model = None
+
+    def _load_model(self):
+        if self.model is None and SentenceTransformer is not None:
+            try:
+                self.model = SentenceTransformer("all-MiniLM-L6-v2")
+            except Exception as e:
+                print(f"⚠️ Error loading SentenceTransformer: {e}")
+                self.model = None
 
     def add_texts(self, texts, metadata=None):
+        self._load_model()
+        if self.model is None:
+            return
+
         for text in texts:
-            emb = simple_embed(text)
+            emb = self.model.encode(text)
             self.texts.append(text)
             self.embeddings.append(emb)
 
     def similarity_search(self, query, top_k=3):
-        if not self.texts:
+        self._load_model()
+        if not self.texts or self.model is None:
             return []
 
-        query_emb = simple_embed(query)
-
+        query_emb = self.model.encode(query)
         scores = []
+
         for idx, emb in enumerate(self.embeddings):
-            score = float(np.dot(query_emb, emb))
+            # Calculate cosine similarity
+            norm_q = np.linalg.norm(query_emb)
+            norm_e = np.linalg.norm(emb)
+            if norm_q > 0 and norm_e > 0:
+                score = np.dot(query_emb, emb) / (norm_q * norm_e)
+            else:
+                score = 0.0
             scores.append((score, self.texts[idx]))
 
         scores.sort(reverse=True, key=lambda x: x[0])
@@ -50,10 +62,8 @@ def chunk_text(text, chunk_size=400, overlap=50):
     words = text.split()
     chunks = []
     start = 0
-
     while start < len(words):
         end = start + chunk_size
         chunks.append(" ".join(words[start:end]))
         start += chunk_size - overlap
-
     return chunks
