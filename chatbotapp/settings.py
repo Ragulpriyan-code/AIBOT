@@ -27,8 +27,10 @@ DEBUG = os.environ.get("DEBUG", "False") == "True"
 
 ALLOWED_HOSTS = [
     ".onrender.com",
+    ".railway.app",
     "localhost",
     "127.0.0.1",
+    "*",  # Allow all hosts (remove in production for better security)
 ]
 
 # ====================================================
