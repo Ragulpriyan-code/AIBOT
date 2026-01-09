@@ -26,9 +26,9 @@ COPY . /app/
 # Collect static files (uses dummy DB to avoid build-time connection errors)
 RUN DATABASE_URL=sqlite:///dummy.db python manage.py collectstatic --noinput
 
-# Run the application
 COPY entrypoint.sh /app/
-RUN chmod +x /app/entrypoint.sh
+# Fix potential Windows CRLF line endings
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Run the application
 CMD ["/app/entrypoint.sh"]
