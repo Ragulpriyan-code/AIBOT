@@ -27,4 +27,4 @@ COPY . /app/
 RUN DATABASE_URL=sqlite:///dummy.db python manage.py collectstatic --noinput
 
 # Run the application
-CMD ["gunicorn", "-c", "gunicorn_config.py", "chatbotapp.wsgi:application"]
+CMD ["sh", "-c", "gunicorn -c gunicorn_config.py chatbotapp.wsgi:application"]
