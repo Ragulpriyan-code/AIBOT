@@ -1,6 +1,7 @@
-# Optimized requirements for lighter deployment (fixes Disk Quota issues)
+# FINAL ULTRA-LIGHTWEIGHT REQUIREMENTS
+# (Crucial: Removes all heavy AI libraries that cause Disk Quota errors)
 
-# Core Web
+# Core Web Framework
 Django
 gunicorn
 whitenoise
@@ -8,24 +9,16 @@ dj-database-url
 psycopg2-binary
 python-dotenv
 
-# AI / NLP (CPU-Optimized)
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1+cpu
-sentence-transformers
-transformers
-numpy
-faiss-cpu
-
-# API Clients
+# API Tools (Lightweight)
 openai
 groq
+requests
+pydantic
 
-# File Processing
+# Simple File Processing
 PyPDF2
 python-docx
-lxml
 
-# Utilities
-requests
-tqdm
-pydantic
+# NOTE: Removed 'torch', 'sentence-transformers', 'transformers', and 'faiss'.
+# These libraries are 2GB+ and cause Disk Quota Exceeded errors.
+# The chatbot will now use pure API-based responses.
