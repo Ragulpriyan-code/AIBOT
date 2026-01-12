@@ -1,7 +1,6 @@
-# FINAL ULTRA-LIGHTWEIGHT REQUIREMENTS
-# (Crucial: Removes all heavy AI libraries that cause Disk Quota errors)
+# Optimized requirements.txt for CPU-Only RAG (Replit Compatible)
 
-# Core Web Framework
+# Web Core
 Django
 gunicorn
 whitenoise
@@ -9,16 +8,18 @@ dj-database-url
 psycopg2-binary
 python-dotenv
 
-# API Tools (Lightweight)
+# AI & RAG (CPU Optimized)
+# This installs the 200MB CPU version instead of the 3GB GPU version
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+sentence-transformers
+numpy
+faiss-cpu==1.9.0
+
+# API & Utils
 openai
 groq
 requests
-pydantic
-
-# Simple File Processing
 PyPDF2
 python-docx
-
-# NOTE: Removed 'torch', 'sentence-transformers', 'transformers', and 'faiss'.
-# These libraries are 2GB+ and cause Disk Quota Exceeded errors.
-# The chatbot will now use pure API-based responses.
+pydantic
