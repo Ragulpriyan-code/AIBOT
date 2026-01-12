@@ -44,20 +44,27 @@ def get_client():
         base_url="https://api.groq.com/openai/v1",
     )
 
-def get_ai_reply(message, history_text="", document_text=""):
+def get_ai_reply(message, history_text="", document_text="", doc_manifest=None):
     client = get_client()
 
+    # Generate a readable list of available documents
+    inventory = "NONE"
+    if doc_manifest:
+        inventory = "\n".join([f"{i+1}. {name}" for i, name in enumerate(doc_manifest)])
+
     prompt = f"""
-You are an AI assistant similar to ChatGPT. You have access to user-uploaded documents below.
+You are an AI assistant similar to ChatGPT. 
+
+CONVERSATION DOCUMENTS (IN ORDER):
+{inventory}
 
 IMPORTANT:
-1. If 'DOCUMENT CONTEXT' is provided, use it to answer the user's question, especially if they ask to "explain", "summarize", or "read" a file.
-2. If the user mentions "this PDF", "the document", or a specific filename, look in the 'DOCUMENT CONTEXT' first.
-3. NO TABLES: Never use markdown tables. Use bullet points instead.
-4. NO SEPARATORS: Do not use horizontal rules like '---'.
-5. CONVERSATIONAL: Be friendly and simple.
+1. Use the 'DOCUMENT CONTEXT' below to answer questions about these files.
+2. If the user mentions "first PDF", "second document", etc., match them to the list above.
+3. If 'DOCUMENT CONTEXT' contains snippets labeled '[Document X]', that corresponds to the X-th file in the list above.
+4. NO TABLES. NO SEPARATORS. CONVERSATIONAL TONE.
 
-DOCUMENT CONTEXT:
+DOCUMENT CONTEXT (EXCERPTS):
 {document_text}
 
 CHAT HISTORY:

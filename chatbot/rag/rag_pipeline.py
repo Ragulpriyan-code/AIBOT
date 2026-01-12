@@ -50,7 +50,7 @@ def retrieve_context(question, document_ids=None, top_k=3):
     """
     Retrieve chunks.
     - If document_ids is provided (list) → only chunks from those documents.
-    - Detects 'first', 'second', or filenames to narrow down search.
+    - Matches ordinal words (first, second, last) to the correct doc.
     """
     if not document_ids:
         return []
@@ -72,30 +72,52 @@ def retrieve_context(question, document_ids=None, top_k=3):
     # 🎯 INTENT DETECTION: Is the user asking for a general summary?
     is_general_query = any(w in question.lower() for w in ["explain", "summarize", "tell me about", "what is this"])
     
-    # 🎯 FILTER BY NAME OR POSITION
+    # 🎯 FILTER BY NAME OR POSITION (Ordinal Mapping)
     target_ids = document_ids
     lower_q = question.lower()
     
-    # Handle "first", "second", etc.
-    if "first" in lower_q and len(document_ids) >= 1:
-        target_ids = [document_ids[0]]
-    elif "second" in lower_q and len(document_ids) >= 2:
-        target_ids = [document_ids[1]]
+    # NLP Mapping: first/second/last/etc -> Index
+    order_map = {
+        "first": 0, "1st": 0, "one": 0,
+        "second": 1, "2nd": 1, "two": 1,
+        "third": 2, "3rd": 2, "three": 2, "3": 2,
+        "four": 3, "4th": 3, "4": 3,
+        "last": -1, "latest": -1, "recent": -1
+    }
     
-    # Handle specific filename mentions
-    for d_id in document_ids:
-        doc = Document.objects.filter(id=d_id).first()
-        if doc and doc.file.name.split('/')[-1].lower() in lower_q:
-            target_ids = [d_id]
-            break
+    for word, idx in order_map.items():
+        if word in lower_q:
+            try:
+                # If idx is -1, it maps correctly to the last item in Python
+                target_ids = [document_ids[idx]]
+                break
+            except (IndexError, KeyError):
+                continue
+    
+    # Handle specific filename mentions (Fallback if ordinal not found)
+    if target_ids == document_ids:
+        for d_id in document_ids:
+            doc = Document.objects.filter(id=d_id).first()
+            if doc and doc.file.name.split('/')[-1].lower() in lower_q:
+                target_ids = [d_id]
+                break
 
-    # If it's a general query for a specific document, just get the first few chunks
+    # If asking for a summary/explanation of a specific document, pull its main content
     if is_general_query and len(target_ids) == 1:
-        # Get chunks directly from store starting with that ID
+        # Get the actual index for labeling
+        try:
+            curr_idx = document_ids.index(target_ids[0]) + 1
+        except ValueError:
+            curr_idx = "?"
+
         relevant_chunks = [t for t in GLOBAL_VECTOR_STORE.texts if f"[DOCUMENT_ID={target_ids[0]}" in t]
         if relevant_chunks:
-            # Return first few chunks of THIS document
-            return [c.split("]\n", 1)[-1] for c in relevant_chunks[:top_k]]
+            # Fix: Avoid backslash in f-string expression for compatibility
+            res = []
+            for c in relevant_chunks[:3]:
+                content = c.split("]\n", 1)[-1]
+                res.append(f"[Document {curr_idx}]\n{content}")
+            return res
 
     # Otherwise, fallback to similarity search
     results = GLOBAL_VECTOR_STORE.similarity_search(query=question, top_k=top_k * 5)
@@ -103,10 +125,14 @@ def retrieve_context(question, document_ids=None, top_k=3):
 
     filtered = []
     for chunk in results:
-        for d_id in target_ids:
+        # We check both target_ids and labeled document_ids for labeling
+        for idx, d_id in enumerate(document_ids):
             if f"[DOCUMENT_ID={d_id}" in chunk:
-                content = chunk.split("]\n", 1)[-1]
-                filtered.append(content)
+                # Only include it if it's in our targeted list (if we filtered)
+                if d_id in target_ids:
+                    content = chunk.split("]\n", 1)[-1]
+                    # Label the chunk with its ordinal position
+                    filtered.append(f"[Document {idx+1}]\n{content}")
                 break 
         if len(filtered) >= top_k:
             break

@@ -75,27 +75,37 @@ def home(request, conversation_id=None):
             for m in reversed(history_qs):
                 history_text += f"User: {m.user_message}\nBot: {m.bot_reply}\n"
 
-            # Get Context (Ordered by upload time)
-            doc_ids = ChatMessage.objects.filter(
+            # Get Documents and Manifest (Ordered by upload time)
+            doc_messages = ChatMessage.objects.filter(
                 conversation=conversation, 
                 message_type="document"
-            ).order_by("created_at").values_list("document_id", flat=True)
+            ).order_by("created_at")
             
-            # Filter out None and remove duplicates while preserving order
-            seen = set()
-            doc_ids = [d for d in doc_ids if d and not (d in seen or seen.add(d))]
+            doc_ids = []
+            doc_manifest = []
+            seen_ids = set()
+            for msg in doc_messages:
+                if msg.document_id and msg.document_id not in seen_ids:
+                    doc_ids.append(msg.document_id)
+                    doc_manifest.append(msg.uploaded_file_name)
+                    seen_ids.add(msg.document_id)
+            
             document_text = ""
             if doc_ids:
                 try:
-                    chunks = retrieve_context(question=user_msg, document_ids=doc_ids)
-                    document_text = "\n".join(chunks)
+                    # Pass the full document list so ordinal logic knows the count
+                    document_text = "\n".join(retrieve_context(
+                        question=user_msg, 
+                        document_ids=doc_ids
+                    ))
                 except Exception as e:
                     print(f"⚠️ Context retrieval failed: {e}")
 
             bot_reply = get_ai_reply(
                 message=user_msg,
                 history_text=history_text,
-                document_text=document_text
+                document_text=document_text,
+                doc_manifest=doc_manifest  # ✅ NEW: Tell AI about ALL docs
             )
 
             ChatMessage.objects.create(
