@@ -5,6 +5,14 @@
     <meta charset="UTF-8">
     <title>MIKEY</title>
 
+    <!-- Markdown rendering library -->
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Syntax highlighting for code blocks -->
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
     <style>
         :root {
             --bg-main: #020617;
@@ -174,6 +182,128 @@
             box-shadow: 0 0 14px var(--neon-soft);
         }
 
+        /* ================= MARKDOWN FORMATTING ================= */
+        .bot-content {
+            line-height: 1.7;
+        }
+
+        .bot-content p {
+            margin: 0 0 12px 0;
+        }
+
+        .bot-content p:last-child {
+            margin-bottom: 0;
+        }
+
+        .bot-content h1,
+        .bot-content h2,
+        .bot-content h3,
+        .bot-content h4,
+        .bot-content h5,
+        .bot-content h6 {
+            margin: 16px 0 10px 0;
+            color: var(--neon);
+            font-weight: 600;
+        }
+
+        .bot-content h1 {
+            font-size: 1.5em;
+        }
+
+        .bot-content h2 {
+            font-size: 1.3em;
+        }
+
+        .bot-content h3 {
+            font-size: 1.15em;
+        }
+
+        .bot-content ul,
+        .bot-content ol {
+            margin: 8px 0;
+            padding-left: 24px;
+        }
+
+        .bot-content li {
+            margin: 4px 0;
+        }
+
+        .bot-content code {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            color: #38bdf8;
+        }
+
+        .bot-content pre {
+            background: #000;
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            overflow-x: auto;
+            margin: 12px 0;
+        }
+
+        .bot-content pre code {
+            background: transparent;
+            padding: 0;
+            color: #e5e7eb;
+            display: block;
+        }
+
+        .bot-content blockquote {
+            border-left: 3px solid var(--neon);
+            padding-left: 12px;
+            margin: 12px 0;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .bot-content a {
+            color: var(--neon);
+            text-decoration: none;
+        }
+
+        .bot-content a:hover {
+            text-decoration: underline;
+        }
+
+        .bot-content table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 12px 0;
+        }
+
+        .bot-content th,
+        .bot-content td {
+            border: 1px solid rgba(56, 189, 248, 0.2);
+            padding: 8px;
+            text-align: left;
+        }
+
+        .bot-content th {
+            background: rgba(56, 189, 248, 0.1);
+            font-weight: 600;
+        }
+
+        .bot-content hr {
+            border: none;
+            border-top: 1px solid rgba(56, 189, 248, 0.2);
+            margin: 16px 0;
+        }
+
+        .bot-content strong {
+            font-weight: 700;
+            color: var(--neon);
+        }
+
+        .bot-content em {
+            font-style: italic;
+            color: var(--text-muted);
+        }
+
         /* ================= INPUT ================= */
         .input-area {
             padding: 16px;
@@ -267,7 +397,9 @@
             <div class="msg user">{{ msg.user_message }}</div>
             {% endif %}
             {% if msg.bot_reply %}
-            <div class="msg bot">{{ msg.bot_reply }}</div>
+            <div class="msg bot">
+                <div class="bot-content" data-markdown="{{ msg.bot_reply }}"></div>
+            </div>
             {% endif %}
             {% endif %}
             {% endfor %}
@@ -275,7 +407,7 @@
 
         <div class="input-area">
 
-            <!-- FILE PREVIEW (NEW) -->
+            <!-- FILE PREVIEW -->
             <div id="filePreview" style="
         display:none;
         margin-bottom:10px;
@@ -300,6 +432,28 @@
     </main>
 
     <script>
+        // Configure marked.js
+        marked.setOptions({
+            breaks: true,
+            gfm: true,
+            headerIds: false,
+            mangle: false
+        });
+
+        // Render markdown
+        function renderAllMarkdown() {
+            document.querySelectorAll('.bot-content').forEach(function (element) {
+                const markdownText = element.getAttribute('data-markdown');
+                if (markdownText && !element.classList.contains('rendered')) {
+                    element.innerHTML = marked.parse(markdownText);
+                    element.querySelectorAll('pre code').forEach(hljs.highlightElement);
+                    element.classList.add('rendered');
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', renderAllMarkdown);
+
         const messages = document.querySelector(".messages");
         messages.scrollTop = messages.scrollHeight;
 
@@ -316,9 +470,6 @@
             }
         });
     </script>
-
-
-
 </body>
 
 </html>

@@ -60,7 +60,7 @@ class Conversation(models.Model):
 
 
 # ==============================
-# 🗨️ Chat Message Model (FIXED)
+# 🗨️ Chat Message Model 
 # ==============================
 class ChatMessage(models.Model):
     MESSAGE_TYPES = (
@@ -69,7 +69,7 @@ class ChatMessage(models.Model):
     )
 
     user = models.ForeignKey(
-        settings.AUTH_USER_MODEL,   # ✅ FIXED HERE
+        settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
         related_name="messages"
     )
@@ -92,6 +92,15 @@ class ChatMessage(models.Model):
     uploaded_file_name = models.CharField(
         max_length=255,
         blank=True
+    )
+
+    # 📄 Reference to the original document object (Multi-doc support)
+    document = models.ForeignKey(
+        Document,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="chat_messages"
     )
 
     created_at = models.DateTimeField(auto_now_add=True)

@@ -48,17 +48,21 @@ def home(request, conversation_id=None):
             conversation.active_document = document
             conversation.save()
 
-            ingest_document(
-                user=user,
-                uploaded_file=uploaded_file,
-                document_id=document.id
-            )
+            try:
+                ingest_document(
+                    user=user,
+                    uploaded_file=uploaded_file,
+                    document_id=document.id
+                )
+            except Exception as e:
+                print(f"❌ Error during document ingestion: {e}")
 
             ChatMessage.objects.create(
                 conversation=conversation,
                 user=user,
                 message_type="document",
-                uploaded_file_name=uploaded_file.name
+                uploaded_file_name=uploaded_file.name,
+                document=document  # ✅ LINK THE OBJECT
             )
 
             return redirect("conversation", conversation_id=conversation.id)
@@ -80,12 +84,25 @@ def home(request, conversation_id=None):
                 history_text += f"Bot: {m.bot_reply}\n"
 
             document_text = ""
-            if conversation.active_document:
-                chunks = retrieve_context(
-                    question=user_msg,
-                    document_id=conversation.active_document.id
-                )
-                document_text = "\n".join(chunks)
+            
+            # Find all documents associated with this conversation
+            doc_ids = ChatMessage.objects.filter(
+                conversation=conversation, 
+                message_type="document"
+            ).values_list("document_id", flat=True)
+            
+            # Filter out None and remove duplicates
+            doc_ids = list(set([d for d in doc_ids if d]))
+            
+            if doc_ids:
+                try:
+                    chunks = retrieve_context(
+                        question=user_msg,
+                        document_ids=doc_ids
+                    )
+                    document_text = "\n".join(chunks)
+                except Exception as e:
+                    print(f"⚠️ Context retrieval failed: {e}")
 
             bot_reply = get_ai_reply(
                 message=user_msg,
@@ -168,4 +185,3 @@ def delete_chat(request, convo_id):
     )
     conversation.delete()
     return redirect("home")
-
