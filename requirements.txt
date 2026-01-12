@@ -1,4 +1,9 @@
-# Core Django
+# Replit-Optimized requirements.txt
+# This configuration EXCLUDES heavy libraries (torch, sentence-transformers)
+# to stay within Replit's 1-2GB disk quota, relying on the project's
+# built-in local embedding fallback logic.
+
+# Core Web Framework
 Django
 gunicorn
 whitenoise
@@ -6,20 +11,17 @@ dj-database-url
 psycopg2-binary
 python-dotenv
 
-# RAG (lightweight)
-faiss-cpu==1.7.4
+# Search & Vector Space (Lightweight)
 numpy
+faiss-cpu==1.9.0
 
-# LLM APIs
+# API-Based Intelligence
 openai
 groq
 requests
+pydantic
 
-# Document parsing
+# File Formatting
 PyPDF2
 python-docx
 lxml
-
-# Django internals
-sqlparse
-asgiref
