@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import login
@@ -7,7 +8,6 @@ from .models import ChatMessage, Conversation, Document
 from .openai_client import get_ai_reply
 
 from .rag.rag_pipeline import ingest_document, retrieve_context
-
 
 
 @login_required
@@ -36,24 +36,18 @@ def home(request, conversation_id=None):
     # Handle POST
     # ===============================
     if request.method == "POST":
-
-        # ---- Document upload ----
+        is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
+        
+        # 1. Handle Document Upload (if any)
         uploaded_file = request.FILES.get("document")
+        doc_obj = None
         if uploaded_file:
-            document = Document.objects.create(
-                user=user,
-                file=uploaded_file
-            )
-
-            conversation.active_document = document
+            doc_obj = Document.objects.create(user=user, file=uploaded_file)
+            conversation.active_document = doc_obj
             conversation.save()
 
             try:
-                ingest_document(
-                    user=user,
-                    uploaded_file=uploaded_file,
-                    document_id=document.id
-                )
+                ingest_document(user=user, uploaded_file=uploaded_file, document_id=doc_obj.id)
             except Exception as e:
                 print(f"❌ Error during document ingestion: {e}")
 
@@ -62,44 +56,36 @@ def home(request, conversation_id=None):
                 user=user,
                 message_type="document",
                 uploaded_file_name=uploaded_file.name,
-                document=document  # ✅ LINK THE OBJECT
+                document=doc_obj
             )
 
-            return redirect("conversation", conversation_id=conversation.id)
-
-        # ---- Text message ----
+        # 2. Handle Text Message (if any)
         user_msg = request.POST.get("message", "").strip()
-
+        bot_reply = ""
+        
         if user_msg:
+            # Get history
             history_qs = (
                 ChatMessage.objects
                 .filter(conversation=conversation)
                 .exclude(message_type="document")
                 .order_by("-created_at")[:6]
             )
-
             history_text = ""
             for m in reversed(history_qs):
-                history_text += f"User: {m.user_message}\n"
-                history_text += f"Bot: {m.bot_reply}\n"
+                history_text += f"User: {m.user_message}\nBot: {m.bot_reply}\n"
 
-            document_text = ""
-            
-            # Find all documents associated with this conversation
-            doc_ids = ChatMessage.objects.filter(
+            # Get Context
+            doc_ids = list(set(ChatMessage.objects.filter(
                 conversation=conversation, 
                 message_type="document"
-            ).values_list("document_id", flat=True)
+            ).values_list("document_id", flat=True)))
+            doc_ids = [d for d in doc_ids if d]
             
-            # Filter out None and remove duplicates
-            doc_ids = list(set([d for d in doc_ids if d]))
-            
+            document_text = ""
             if doc_ids:
                 try:
-                    chunks = retrieve_context(
-                        question=user_msg,
-                        document_ids=doc_ids
-                    )
+                    chunks = retrieve_context(question=user_msg, document_ids=doc_ids)
                     document_text = "\n".join(chunks)
                 except Exception as e:
                     print(f"⚠️ Context retrieval failed: {e}")
@@ -122,24 +108,22 @@ def home(request, conversation_id=None):
                 conversation.title = user_msg[:40]
                 conversation.save()
 
+        # 3. Return Response
+        if is_ajax:
+            return JsonResponse({
+                "status": "success",
+                "bot_reply": bot_reply,
+                "user_msg": user_msg,
+                "uploaded_file": uploaded_file.name if uploaded_file else None
+            })
+
         return redirect("conversation", conversation_id=conversation.id)
-
-
 
     # ===============================
     # Load UI
     # ===============================
-    conversations = (
-        Conversation.objects
-        .filter(user=user)
-        .order_by("-created_at")
-    )
-
-    chat_history = (
-        ChatMessage.objects
-        .filter(conversation=conversation)
-        .order_by("created_at")
-    )
+    conversations = Conversation.objects.filter(user=user).order_by("-created_at")
+    chat_history = ChatMessage.objects.filter(conversation=conversation).order_by("created_at")
 
     return render(
         request,
@@ -153,12 +137,8 @@ def home(request, conversation_id=None):
 
 @login_required
 def new_chat(request):
-    conversation = Conversation.objects.create(
-        user=request.user,
-        title="New chat"
-    )
+    conversation = Conversation.objects.create(user=request.user, title="New chat")
     return redirect("conversation", conversation_id=conversation.id)
-
 
 def signup(request):
     if request.method == "POST":
@@ -169,19 +149,10 @@ def signup(request):
             return redirect("home")
     else:
         form = UserCreationForm()
-
-    return render(
-        request,
-        "registration/signup.html",
-        {"form": form}
-    )
+    return render(request, "registration/signup.html", {"form": form})
 
 @login_required
 def delete_chat(request, convo_id):
-    conversation = get_object_or_404(
-        Conversation,
-        id=convo_id,
-        user=request.user
-    )
+    conversation = get_object_or_404(Conversation, id=convo_id, user=request.user)
     conversation.delete()
     return redirect("home")

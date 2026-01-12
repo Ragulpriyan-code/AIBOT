@@ -127,7 +127,7 @@
         }
 
         .logout {
-            margin-top: 10px;
+            margin-top: auto;
             background: transparent;
             border: 1px solid var(--danger);
             color: var(--danger);
@@ -176,10 +176,34 @@
             border: 1px solid rgba(56, 189, 248, 0.15);
         }
 
-        .document {
+        .document-msg {
             background: #020617;
             border-left: 4px solid var(--neon);
             box-shadow: 0 0 14px var(--neon-soft);
+            color: var(--neon);
+        }
+
+        .typing-cursor {
+            display: inline-block;
+            width: 8px;
+            height: 18px;
+            background: var(--neon);
+            margin-left: 4px;
+            animation: blink 0.8s infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes blink {
+
+            0%,
+            48% {
+                opacity: 1;
+            }
+
+            50%,
+            100% {
+                opacity: 0;
+            }
         }
 
         /* ================= MARKDOWN FORMATTING ================= */
@@ -197,25 +221,10 @@
 
         .bot-content h1,
         .bot-content h2,
-        .bot-content h3,
-        .bot-content h4,
-        .bot-content h5,
-        .bot-content h6 {
+        .bot-content h3 {
             margin: 16px 0 10px 0;
             color: var(--neon);
             font-weight: 600;
-        }
-
-        .bot-content h1 {
-            font-size: 1.5em;
-        }
-
-        .bot-content h2 {
-            font-size: 1.3em;
-        }
-
-        .bot-content h3 {
-            font-size: 1.15em;
         }
 
         .bot-content ul,
@@ -228,15 +237,6 @@
             margin: 4px 0;
         }
 
-        .bot-content code {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Courier New', monospace;
-            font-size: 0.9em;
-            color: #38bdf8;
-        }
-
         .bot-content pre {
             background: #000;
             border: 1px solid rgba(56, 189, 248, 0.2);
@@ -244,64 +244,6 @@
             padding: 12px;
             overflow-x: auto;
             margin: 12px 0;
-        }
-
-        .bot-content pre code {
-            background: transparent;
-            padding: 0;
-            color: #e5e7eb;
-            display: block;
-        }
-
-        .bot-content blockquote {
-            border-left: 3px solid var(--neon);
-            padding-left: 12px;
-            margin: 12px 0;
-            color: var(--text-muted);
-            font-style: italic;
-        }
-
-        .bot-content a {
-            color: var(--neon);
-            text-decoration: none;
-        }
-
-        .bot-content a:hover {
-            text-decoration: underline;
-        }
-
-        .bot-content table {
-            border-collapse: collapse;
-            width: 100%;
-            margin: 12px 0;
-        }
-
-        .bot-content th,
-        .bot-content td {
-            border: 1px solid rgba(56, 189, 248, 0.2);
-            padding: 8px;
-            text-align: left;
-        }
-
-        .bot-content th {
-            background: rgba(56, 189, 248, 0.1);
-            font-weight: 600;
-        }
-
-        .bot-content hr {
-            border: none;
-            border-top: 1px solid rgba(56, 189, 248, 0.2);
-            margin: 16px 0;
-        }
-
-        .bot-content strong {
-            font-weight: 700;
-            color: var(--neon);
-        }
-
-        .bot-content em {
-            font-style: italic;
-            color: var(--text-muted);
         }
 
         /* ================= INPUT ================= */
@@ -322,9 +264,15 @@
         }
 
         .upload-label {
-            font-size: 22px;
+            font-size: 24px;
             cursor: pointer;
             color: var(--neon);
+            padding: 0 8px;
+            transition: transform 0.2s;
+        }
+
+        .upload-label:hover {
+            transform: scale(1.2);
         }
 
         .input-box input[type="text"] {
@@ -344,139 +292,208 @@
             font-weight: 700;
             cursor: pointer;
             color: #000;
-            box-shadow: 0 0 18px var(--neon-soft);
         }
 
-        .send-btn:hover {
-            transform: scale(1.05);
+        #filePreview {
+            display: none;
+            margin-bottom: 12px;
+            padding: 10px 16px;
+            background: rgba(56, 189, 248, 0.1);
+            border: 1px dashed var(--neon);
+            border-radius: 12px;
+            color: var(--neon);
+            font-size: 14px;
         }
     </style>
 </head>
 
 <body>
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
         <div class="brand">
             <h2>🤖AI BOT</h2>
             <small>Welcome, {{ request.user.username }}</small>
         </div>
-
         <form action="{% url 'new_chat' %}" method="get">
             <button class="new-chat-btn">＋ New Chat</button>
         </form>
-
         <div class="history-title">CHAT HISTORY</div>
-
         <div class="chat-list">
             {% for conv in conversations %}
             <div class="chat-item {% if conv.id == active_conversation.id %}active{% endif %}">
-                <a href="{% url 'conversation' conv.id %}">{{ conv.title }}</a>
-                <form method="post" action="{% url 'delete_chat' conv.id %}">
+                <a href="{% url 'conversation' conv.id %}">{{ conv.title|truncatechars:20 }}</a>
+                <form method="post" action="{% url 'delete_chat' conv.id %}" style="margin:0;">
                     {% csrf_token %}
-                    <button class="delete-btn">🗑</button>
+                    <button class="delete-btn" title="Delete Chat">🗑</button>
                 </form>
             </div>
             {% endfor %}
         </div>
-
         <form method="post" action="{% url 'logout' %}">
             {% csrf_token %}
             <button class="logout">Logout</button>
         </form>
     </aside>
 
-    <!-- MAIN -->
     <main class="main">
-        <div class="messages">
+        <div class="messages" id="messageContainer">
             {% for msg in chat_history %}
             {% if msg.message_type == "document" %}
-            <div class="msg bot document">📄 {{ msg.uploaded_file_name }}</div>
-            {% else %}
+            <div class="msg document-msg">📄 {{ msg.uploaded_file_name }}</div>
+            {% endif %}
             {% if msg.user_message %}
             <div class="msg user">{{ msg.user_message }}</div>
             {% endif %}
             {% if msg.bot_reply %}
             <div class="msg bot">
-                <div class="bot-content" data-markdown="{{ msg.bot_reply }}"></div>
+                <div class="bot-content rendered">{{ msg.bot_reply }}</div>
             </div>
-            {% endif %}
             {% endif %}
             {% endfor %}
         </div>
 
         <div class="input-area">
+            <!-- FILE PREVIEW AREA -->
+            <div id="filePreview">📄 <span id="fileName"></span></div>
 
-            <!-- FILE PREVIEW -->
-            <div id="filePreview" style="
-        display:none;
-        margin-bottom:10px;
-        padding:12px 16px;
-        border-radius:14px;
-        background:#020617;
-        border:1px solid rgba(56,189,248,0.35);
-        color:#38bdf8;
-        box-shadow:0 0 14px rgba(56,189,248,0.25);
-        font-size:14px;
-    ">
-                📄 <span id="fileName"></span>
-            </div>
-            <form method="post" enctype="multipart/form-data" class="input-box">
+            <form id="chatForm" class="input-box" enctype="multipart/form-data">
                 {% csrf_token %}
-                <label for="fileInput" class="upload-label">＋</label>
+                <label for="fileInput" class="upload-label" title="Upload Document">＋</label>
                 <input type="file" id="fileInput" name="document" hidden>
-                <input type="text" name="message" placeholder="Type a message or upload a document…">
-                <button class="send-btn">Send</button>
+
+                <input type="text" id="userInput" placeholder="Type a message..." autocomplete="off">
+                <button type="submit" class="send-btn">Send</button>
             </form>
         </div>
     </main>
 
     <script>
-        // Configure marked.js
-        marked.setOptions({
-            breaks: true,
-            gfm: true,
-            headerIds: false,
-            mangle: false
-        });
+        marked.setOptions({ breaks: true, gfm: true });
 
-        // Scroll to bottom logic
-        function scrollToBottom() {
-            const messages = document.querySelector(".messages");
-            messages.scrollTo({
-                top: messages.scrollHeight,
-                behavior: 'smooth'
+        const container = document.getElementById('messageContainer');
+        const form = document.getElementById('chatForm');
+        const input = document.getElementById('userInput');
+        const fileInput = document.getElementById('fileInput');
+        const filePreview = document.getElementById('filePreview');
+        const fileNameSpan = document.getElementById('fileName');
+
+        function scrollToBottom(smooth = true) {
+            container.scrollTo({
+                top: container.scrollHeight,
+                behavior: smooth ? 'smooth' : 'auto'
             });
         }
 
-        // Render markdown
-        function renderAllMarkdown() {
-            document.querySelectorAll('.bot-content').forEach(function (element) {
-                const markdownText = element.getAttribute('data-markdown');
-                if (markdownText && !element.classList.contains('rendered')) {
-                    element.innerHTML = marked.parse(markdownText);
-                    element.querySelectorAll('pre code').forEach(hljs.highlightElement);
-                    element.classList.add('rendered');
-                }
-            });
-            scrollToBottom();
-        }
-
-        document.addEventListener('DOMContentLoaded', renderAllMarkdown);
-        window.addEventListener('load', scrollToBottom);
-
-        const fileInput = document.getElementById("fileInput");
-        const filePreview = document.getElementById("filePreview");
-        const fileName = document.getElementById("fileName");
-
-        fileInput.addEventListener("change", () => {
+        // File Selection Handler
+        fileInput.onchange = () => {
             if (fileInput.files.length > 0) {
-                fileName.textContent = fileInput.files[0].name;
-                filePreview.style.display = "block";
+                fileNameSpan.textContent = fileInput.files[0].name;
+                filePreview.style.display = 'block';
             } else {
-                filePreview.style.display = "none";
+                filePreview.style.display = 'none';
             }
+        };
+
+        // Render existing messages
+        document.querySelectorAll('.bot-content.rendered').forEach(el => {
+            el.innerHTML = marked.parse(el.textContent);
+            el.querySelectorAll('pre code').forEach(hljs.highlightElement);
         });
+        scrollToBottom(false);
+
+        // Typewriter effect
+        async function typewriter(element, text) {
+            let i = 0;
+            const speed = 3;
+            const cursor = document.createElement('span');
+            cursor.className = 'typing-cursor';
+            element.appendChild(cursor);
+
+            return new Promise(resolve => {
+                function type() {
+                    if (i < text.length) {
+                        element.innerHTML = marked.parse(text.substring(0, i + 1));
+                        element.appendChild(cursor);
+                        i++;
+                        scrollToBottom(true);
+                        setTimeout(type, speed);
+                    } else {
+                        cursor.remove();
+                        element.querySelectorAll('pre code').forEach(hljs.highlightElement);
+                        resolve();
+                    }
+                }
+                type();
+            });
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            const msg = input.value.trim();
+            const file = fileInput.files[0];
+            if (!msg && !file) return;
+
+            // 1. Show Document in UI if uploaded
+            if (file) {
+                const docDiv = document.createElement('div');
+                docDiv.className = 'msg document-msg';
+                docDiv.textContent = `📄 ${file.name}`;
+                container.appendChild(docDiv);
+                filePreview.style.display = 'none';
+            }
+
+            // 2. Add User Message in UI
+            if (msg) {
+                const userDiv = document.createElement('div');
+                userDiv.className = 'msg user';
+                userDiv.textContent = msg;
+                container.appendChild(userDiv);
+            }
+
+            input.value = '';
+            const pendingFile = file; // Save ref
+            fileInput.value = ''; // Clear input
+            scrollToBottom();
+
+            // 3. Prepare Bot Message container (only if there is a message to reply to)
+            let botContent = null;
+            if (msg) {
+                const botDiv = document.createElement('div');
+                botDiv.className = 'msg bot';
+                botContent = document.createElement('div');
+                botContent.className = 'bot-content';
+                botDiv.appendChild(botContent);
+                container.appendChild(botDiv);
+                botContent.textContent = "...";
+            }
+
+            // 4. Send AJAX Request
+            const formData = new FormData();
+            formData.append('message', msg);
+            if (pendingFile) formData.append('document', pendingFile);
+
+            try {
+                const response = await fetch(window.location.href, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                    body: formData
+                });
+
+                const data = await response.json();
+                if (data.status === 'success') {
+                    if (botContent && data.bot_reply) {
+                        await typewriter(botContent, data.bot_reply);
+                    } else if (botContent) {
+                        botContent.textContent = "Document uploaded successfully. You can now ask questions about it!";
+                    }
+                }
+            } catch (err) {
+                if (botContent) botContent.textContent = "Error connecting to AI.";
+            }
+        };
     </script>
 </body>
 
