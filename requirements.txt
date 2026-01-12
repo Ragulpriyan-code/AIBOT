@@ -1,6 +1,9 @@
-# Optimized requirements.txt for CPU-Only RAG (Replit Compatible)
+# Replit-Optimized requirements.txt
+# This configuration EXCLUDES heavy libraries (torch, sentence-transformers)
+# to stay within Replit's 1-2GB disk quota, relying on the project's
+# built-in local embedding fallback logic.
 
-# Web Core
+# Core Web Framework
 Django
 gunicorn
 whitenoise
@@ -8,18 +11,17 @@ dj-database-url
 psycopg2-binary
 python-dotenv
 
-# AI & RAG (CPU Optimized)
-# This installs the 200MB CPU version instead of the 3GB GPU version
---extra-index-url https://download.pytorch.org/whl/cpu
-torch==2.5.1+cpu
-sentence-transformers
+# Search & Vector Space (Lightweight)
 numpy
 faiss-cpu==1.9.0
 
-# API & Utils
+# API-Based Intelligence
 openai
 groq
 requests
+pydantic
+
+# File Formatting
 PyPDF2
 python-docx
-pydantic
+lxml
