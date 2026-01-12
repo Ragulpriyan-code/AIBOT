@@ -75,13 +75,15 @@ def home(request, conversation_id=None):
             for m in reversed(history_qs):
                 history_text += f"User: {m.user_message}\nBot: {m.bot_reply}\n"
 
-            # Get Context
-            doc_ids = list(set(ChatMessage.objects.filter(
+            # Get Context (Ordered by upload time)
+            doc_ids = ChatMessage.objects.filter(
                 conversation=conversation, 
                 message_type="document"
-            ).values_list("document_id", flat=True)))
-            doc_ids = [d for d in doc_ids if d]
+            ).order_by("created_at").values_list("document_id", flat=True)
             
+            # Filter out None and remove duplicates while preserving order
+            seen = set()
+            doc_ids = [d for d in doc_ids if d and not (d in seen or seen.add(d))]
             document_text = ""
             if doc_ids:
                 try:

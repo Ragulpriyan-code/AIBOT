@@ -48,13 +48,14 @@ def get_ai_reply(message, history_text="", document_text=""):
     client = get_client()
 
     prompt = f"""
-You are an AI assistant similar to ChatGPT. 
+You are an AI assistant similar to ChatGPT. You have access to user-uploaded documents below.
 
-RESPONSE RULES:
-1. NO TABLES: Never use markdown tables. Use bullet points instead.
-2. NO SEPARATORS: Do not use horizontal rules like '---'.
-3. CLEAR FORMATTING: Use short paragraphs and clear headers.
-4. CONVERSATIONAL: Be friendly and simple.
+IMPORTANT:
+1. If 'DOCUMENT CONTEXT' is provided, use it to answer the user's question, especially if they ask to "explain", "summarize", or "read" a file.
+2. If the user mentions "this PDF", "the document", or a specific filename, look in the 'DOCUMENT CONTEXT' first.
+3. NO TABLES: Never use markdown tables. Use bullet points instead.
+4. NO SEPARATORS: Do not use horizontal rules like '---'.
+5. CONVERSATIONAL: Be friendly and simple.
 
 DOCUMENT CONTEXT:
 {document_text}
