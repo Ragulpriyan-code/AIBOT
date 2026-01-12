@@ -440,6 +440,15 @@
             mangle: false
         });
 
+        // Scroll to bottom logic
+        function scrollToBottom() {
+            const messages = document.querySelector(".messages");
+            messages.scrollTo({
+                top: messages.scrollHeight,
+                behavior: 'smooth'
+            });
+        }
+
         // Render markdown
         function renderAllMarkdown() {
             document.querySelectorAll('.bot-content').forEach(function (element) {
@@ -450,12 +459,11 @@
                     element.classList.add('rendered');
                 }
             });
+            scrollToBottom();
         }
 
         document.addEventListener('DOMContentLoaded', renderAllMarkdown);
-
-        const messages = document.querySelector(".messages");
-        messages.scrollTop = messages.scrollHeight;
+        window.addEventListener('load', scrollToBottom);
 
         const fileInput = document.getElementById("fileInput");
         const filePreview = document.getElementById("filePreview");
