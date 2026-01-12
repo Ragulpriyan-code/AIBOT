@@ -1,9 +1,6 @@
-# Replit-Optimized requirements.txt
-# This configuration EXCLUDES heavy libraries (torch, sentence-transformers)
-# to stay within Replit's 1-2GB disk quota, relying on the project's
-# built-in local embedding fallback logic.
+# Production requirements for Render (fixes RAG issues)
 
-# Core Web Framework
+# Core Web
 Django
 gunicorn
 whitenoise
@@ -11,17 +8,23 @@ dj-database-url
 psycopg2-binary
 python-dotenv
 
-# Search & Vector Space (Lightweight)
+# AI / NLP (CPU-Optimized for Render/Production)
+# This installs the 200MB CPU version instead of the 3GB GPU version
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.5.1+cpu
+sentence-transformers
 numpy
 faiss-cpu==1.9.0
 
-# API-Based Intelligence
+# API Clients
 openai
 groq
-requests
-pydantic
 
-# File Formatting
+# File Processing
 PyPDF2
 python-docx
 lxml
+
+# Utilities
+requests
+pydantic

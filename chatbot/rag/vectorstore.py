@@ -25,6 +25,7 @@ class SimpleVectorStore:
     def add_texts(self, texts, metadata=None):
         self._load_model()
         if self.model is None:
+            print("❌ Cannot add_texts: Model is not loaded. Check if sentence-transformers is installed.")
             return
 
         for text in texts:
@@ -34,7 +35,10 @@ class SimpleVectorStore:
 
     def similarity_search(self, query, top_k=3):
         self._load_model()
-        if not self.texts or self.model is None:
+        if not self.texts:
+            return []
+        if self.model is None:
+            print("❌ Cannot search: Model is not loaded.")
             return []
 
         query_emb = self.model.encode(query)
