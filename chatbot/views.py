@@ -168,3 +168,7 @@ def delete_chat(request, convo_id):
     conversation = get_object_or_404(Conversation, id=convo_id, user=request.user)
     conversation.delete()
     return redirect("home")
+
+def health_check(request):
+    """Health check endpoint for Render"""
+    return JsonResponse({"status": "ok", "service": "aibot"})

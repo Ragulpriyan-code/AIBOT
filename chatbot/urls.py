@@ -19,4 +19,5 @@ urlpatterns = [
 
     path("logout/", auth_views.LogoutView.as_view(), name="logout"),
     path("delete/<int:convo_id>/", views.delete_chat, name="delete_chat"),
+    path("health/", views.health_check, name="health_check"),
 ]
