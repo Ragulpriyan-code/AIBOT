@@ -30,6 +30,9 @@ else:
         print("Superuser already exists")
 EOF
 
+echo "🔄 Reloading documents into vector store..."
+python manage.py reload_documents || echo "⚠️ Warning: Document reload failed, but continuing..."
+
 echo "Starting Gunicorn..."
 exec gunicorn chatbotapp.wsgi:application \
   --bind 0.0.0.0:$PORT \

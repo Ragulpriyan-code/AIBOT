@@ -14,6 +14,7 @@ venv/
 db.sqlite3
 media/
 documents/
+vectorstore_data/
 
 # Logs
 *.log

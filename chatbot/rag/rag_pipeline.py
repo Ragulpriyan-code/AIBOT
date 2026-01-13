@@ -1,7 +1,10 @@
 # chatbot/rag/rag_pipeline.py
 
 from .loader import load_document
-from .vectorstore import GLOBAL_VECTOR_STORE, chunk_text
+from .vectorstore import initialize_vectorstore, chunk_text
+
+# Initialize vector store on import
+GLOBAL_VECTOR_STORE = initialize_vectorstore()
 
 
 # ======================================================

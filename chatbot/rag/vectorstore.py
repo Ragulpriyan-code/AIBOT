@@ -1,6 +1,9 @@
 # chatbot/rag/vectorstore.py
 
 import numpy as np
+import os
+import pickle
+from pathlib import Path
 
 try:
     from sentence_transformers import SentenceTransformer
@@ -9,10 +12,13 @@ except ImportError:
 
 
 class SimpleVectorStore:
-    def __init__(self):
+    def __init__(self, persist_path=None):
         self.texts = []
         self.embeddings = []
         self.model = None
+        self.persist_path = persist_path
+        if persist_path:
+            self._load_from_disk()
 
     def _load_model(self):
         if self.model is None and SentenceTransformer is not None:
@@ -21,6 +27,51 @@ class SimpleVectorStore:
             except Exception as e:
                 print(f"⚠️ Error loading SentenceTransformer: {e}")
                 self.model = None
+
+    def _save_to_disk(self):
+        """Save vector store to disk"""
+        if not self.persist_path:
+            return
+        try:
+            data = {
+                'texts': self.texts,
+                'embeddings': self.embeddings
+            }
+            # Ensure directory exists
+            persist_dir = Path(self.persist_path).parent
+            persist_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Save to temporary file first, then rename (atomic write)
+            temp_path = str(self.persist_path) + '.tmp'
+            with open(temp_path, 'wb') as f:
+                pickle.dump(data, f)
+            
+            # Atomic rename
+            if os.path.exists(self.persist_path):
+                os.remove(self.persist_path)
+            os.rename(temp_path, self.persist_path)
+            
+            print(f"💾 Saved {len(self.texts)} chunks to {self.persist_path}")
+        except Exception as e:
+            print(f"⚠️ Error saving vector store: {e}")
+
+    def _load_from_disk(self):
+        """Load vector store from disk"""
+        if not self.persist_path or not os.path.exists(self.persist_path):
+            if self.persist_path:
+                print(f"📂 No existing vector store found at {self.persist_path}, starting fresh")
+            return
+        try:
+            with open(self.persist_path, 'rb') as f:
+                data = pickle.load(f)
+                self.texts = data.get('texts', [])
+                self.embeddings = data.get('embeddings', [])
+                print(f"✅ Loaded {len(self.texts)} chunks from {self.persist_path}")
+        except Exception as e:
+            print(f"⚠️ Error loading vector store from {self.persist_path}: {e}")
+            # Reset to empty on error
+            self.texts = []
+            self.embeddings = []
 
     def add_texts(self, texts, metadata=None):
         self._load_model()
@@ -32,6 +83,10 @@ class SimpleVectorStore:
             emb = self.model.encode(text)
             self.texts.append(text)
             self.embeddings.append(emb)
+        
+        # Auto-save after adding texts
+        if self.persist_path:
+            self._save_to_disk()
 
     def similarity_search(self, query, top_k=3):
         self._load_model()
@@ -58,8 +113,31 @@ class SimpleVectorStore:
         return [text for _, text in scores[:top_k]]
 
 
-# 🔥 GLOBAL STORE
-GLOBAL_VECTOR_STORE = SimpleVectorStore()
+# 🔥 GLOBAL STORE with persistence
+# Use project root directory for persistence (works on Render)
+def get_vectorstore_path():
+    """Get the path for the persistent vector store"""
+    try:
+        from django.conf import settings
+        base_dir = Path(settings.BASE_DIR)
+    except:
+        # Fallback if Django not ready yet
+        base_dir = Path(__file__).resolve().parent.parent.parent
+    
+    vectorstore_dir = base_dir / 'vectorstore_data'
+    vectorstore_dir.mkdir(exist_ok=True)
+    return str(vectorstore_dir / 'vectorstore.pkl')
+
+# Initialize with persistence path (lazy initialization)
+GLOBAL_VECTOR_STORE = None
+
+def initialize_vectorstore():
+    """Initialize the global vector store with persistence"""
+    global GLOBAL_VECTOR_STORE
+    if GLOBAL_VECTOR_STORE is None:
+        persist_path = get_vectorstore_path()
+        GLOBAL_VECTOR_STORE = SimpleVectorStore(persist_path=persist_path)
+    return GLOBAL_VECTOR_STORE
 
 
 def chunk_text(text, chunk_size=400, overlap=50):
