@@ -114,29 +114,19 @@ class SimpleVectorStore:
 
 
 # 🔥 GLOBAL STORE with persistence
-# Use project root directory for persistence (works on Render)
 def get_vectorstore_path():
     """Get the path for the persistent vector store"""
-    try:
-        from django.conf import settings
-        base_dir = Path(settings.BASE_DIR)
-    except:
-        # Fallback if Django not ready yet
-        base_dir = Path(__file__).resolve().parent.parent.parent
-    
+    # Use a fixed path relative to the project root for reliability
+    base_dir = Path(__file__).resolve().parent.parent.parent
     vectorstore_dir = base_dir / 'vectorstore_data'
     vectorstore_dir.mkdir(exist_ok=True)
     return str(vectorstore_dir / 'vectorstore.pkl')
 
-# Initialize with persistence path (lazy initialization)
-GLOBAL_VECTOR_STORE = None
+# Initialize once at module level
+GLOBAL_VECTOR_STORE = SimpleVectorStore(persist_path=get_vectorstore_path())
 
 def initialize_vectorstore():
-    """Initialize the global vector store with persistence"""
-    global GLOBAL_VECTOR_STORE
-    if GLOBAL_VECTOR_STORE is None:
-        persist_path = get_vectorstore_path()
-        GLOBAL_VECTOR_STORE = SimpleVectorStore(persist_path=persist_path)
+    """Returns the global vector store instance"""
     return GLOBAL_VECTOR_STORE
 
 

@@ -46,12 +46,14 @@ echo "Starting Gunicorn..."
 # Add --capture-output to capture print statements
 exec gunicorn chatbotapp.wsgi:application \
   --bind 0.0.0.0:$PORT \
-  --workers 2 \
+  --workers 1 \
   --worker-class sync \
+  --threads 4 \
   --timeout 120 \
-  --keepalive 5 \
+  --keep-alive 5 \
   --max-requests 1000 \
   --max-requests-jitter 50 \
+  --preload \
   --access-logfile - \
   --error-logfile - \
   --log-level info \
