@@ -23,7 +23,11 @@ class SimpleVectorStore:
     def _load_model(self):
         if self.model is None and SentenceTransformer is not None:
             try:
-                self.model = SentenceTransformer("all-MiniLM-L6-v2")
+                # Use local model cache directory
+                base_dir = Path(__file__).resolve().parent.parent.parent
+                cache_dir = str(base_dir / "model_cache")
+                print(f"🔄 Loading SentenceTransformer from {cache_dir}...")
+                self.model = SentenceTransformer("all-MiniLM-L6-v2", cache_folder=cache_dir)
             except Exception as e:
                 print(f"⚠️ Error loading SentenceTransformer: {e}")
                 self.model = None

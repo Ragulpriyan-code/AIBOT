@@ -37,23 +37,21 @@ else:
         print("Superuser already exists")
 EOF
 
-echo "🔄 Reloading documents into vector store..."
-python manage.py reload_documents || echo "⚠️ Warning: Document reload failed, but continuing..."
+# echo "🔄 Reloading documents into vector store..."
+# python manage.py reload_documents || echo "⚠️ Warning: Document reload failed, but continuing..."
 
 echo "Starting Gunicorn..."
-# Use sync workers for better stability (can switch to gthread later if needed)
-# Add --preload to load app before forking workers (faster startup)
-# Add --capture-output to capture print statements
+# Disable --preload to allow master to start instantly
+# Render's 512MB RAM is very tight for SentenceTransformers
 exec gunicorn chatbotapp.wsgi:application \
   --bind 0.0.0.0:$PORT \
   --workers 1 \
   --worker-class sync \
-  --threads 4 \
+  --threads 2 \
   --timeout 120 \
   --keep-alive 5 \
-  --max-requests 1000 \
-  --max-requests-jitter 50 \
-  --preload \
+  --max-requests 100 \
+  --max-requests-jitter 10 \
   --access-logfile - \
   --error-logfile - \
   --log-level info \
