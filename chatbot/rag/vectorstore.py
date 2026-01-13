@@ -83,23 +83,31 @@ class SimpleVectorStore:
             print("❌ Cannot add_texts: Model is not loaded. Check if sentence-transformers is installed.")
             return
 
-        for text in texts:
-            emb = self.model.encode(text)
-            self.texts.append(text)
-            self.embeddings.append(emb)
-        
-        # Auto-save after adding texts
-        if self.persist_path:
-            self._save_to_disk()
+        print(f"📝 Vectorizing {len(texts)} new chunks...")
+        try:
+            for text in texts:
+                emb = self.model.encode(text)
+                self.texts.append(text)
+                self.embeddings.append(emb)
+            
+            print(f"✅ Current total chunks in store: {len(self.texts)}")
+            
+            # Auto-save after adding texts
+            if self.persist_path:
+                self._save_to_disk()
+        except Exception as e:
+            print(f"❌ Error adding texts to vector store: {e}")
 
     def similarity_search(self, query, top_k=3):
         self._load_model()
         if not self.texts:
+            print("📭 Vector store is empty. No context to retrieve.")
             return []
         if self.model is None:
             print("❌ Cannot search: Model is not loaded.")
             return []
 
+        print(f"🔍 Searching context for query: '{query}'...")
         query_emb = self.model.encode(query)
         scores = []
 

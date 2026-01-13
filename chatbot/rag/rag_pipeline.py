@@ -67,16 +67,22 @@ def retrieve_context(question, document_ids=None, top_k=3):
     
     for d_id in document_ids:
         marker = f"[DOCUMENT_ID={d_id}"
-        if marker not in currently_loaded_markers:
+        # Check if ANY chunk in the global store contains this marker
+        is_already_loaded = any(marker in t for t in GLOBAL_VECTOR_STORE.texts)
+        
+        if not is_already_loaded:
+            print(f"🔍 [Worker Sync] Document {d_id} not in memory. Fetching from DB...")
             doc = Document.objects.filter(id=d_id).first()
             if doc and doc.extracted_text:
-                fname = doc.file.name.split('/')[-1]
-                print(f"📦 [Worker Sync] Loading {fname} (ID: {d_id}) into memory...")
+                fname = doc.file.name.split('/')[-1] if doc.file.name else f"doc_{d_id}"
+                print(f"📦 [Worker Sync] Loading {fname} ({len(doc.extracted_text)} chars) into vector store...")
                 chunks = chunk_text(doc.extracted_text)
                 wrapped = [f"[DOCUMENT_ID={d_id} FILENAME={fname}]\n{c}" for c in chunks]
                 GLOBAL_VECTOR_STORE.add_texts(wrapped)
             else:
-                print(f"⚠️ [Worker Sync] Document {d_id} has no extracted text in DB.")
+                print(f"⚠️ [Worker Sync] Document {d_id} cannot be loaded: No text available in DB.")
+        else:
+            print(f"✅ [Worker Sync] Document {d_id} is already in memory.")
 
     # 🎯 INTENT DETECTION
     is_general_query = any(w in question.lower() for w in ["explain", "summarize", "tell me about", "what is this"])
