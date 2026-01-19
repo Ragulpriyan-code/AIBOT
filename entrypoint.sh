@@ -7,16 +7,10 @@ PORT=${PORT:-8000}
 echo "Starting server on port: $PORT"
 
 echo "Running database migrations..."
-python manage.py migrate --noinput || {
-    echo "⚠️ Migration failed, but continuing..."
-}
+# Running migrations here is safer as the DB is guaranteed to be available
+python manage.py migrate --noinput || echo "⚠️ Migration failed, but continuing..."
 
-echo "Collecting static files..."
-# Create static directory if it doesn't exist
-mkdir -p /app/static || true
-python manage.py collectstatic --noinput || {
-    echo "⚠️ Static collection failed, but continuing..."
-}
+# NOTE: collectstatic is now handled in build.sh to speed up startup
 
 echo "Ensuring admin user exists..."
 python manage.py shell << 'EOF' || echo "⚠️ Admin user setup failed, but continuing..."
